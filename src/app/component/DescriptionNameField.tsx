@@ -1,46 +1,57 @@
 import React, { useEffect, useRef, useState } from 'react'
+import useTaskManager from '../hooks/useTaskManager'
+import { useTaskContext } from '../utils/TaskProvider'
 
 interface DescriptionNameFieldProps {
   description: string
-  setDescription: (x: string) => void
-  handleUpdateTaskDescription: (newDescription: string, i: number) => void
   i: number
+  checked: boolean
 }
 
 const DescriptionNameField = ({
   description,
-  setDescription,
-  handleUpdateTaskDescription,
   i,
+  checked,
 }: DescriptionNameFieldProps) => {
+  const { handleUpdateTaskDescription } = useTaskContext()
   const ref = useRef<HTMLDivElement>(null)
   const [editMode, setEditMode] = useState(false)
-
+  const handleToggleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (ref.current && ref.current?.contains(event.target as Node)) {
+      setEditMode(true)
+    }
+  }
   useEffect(() => {
-    const handleClickOutOfTask = (event: any) => {
-      if (ref.current && !ref.current?.contains(event.target)) {
-        return setEditMode(!editMode)
+    const handleClickOutOfTask = (event: MouseEvent) => {
+      if (ref.current && !ref.current?.contains(event.target as Node)) {
+        return setEditMode(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutOfTask)
+    document.addEventListener('click', handleClickOutOfTask)
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutOfTask)
+      document.removeEventListener('click', handleClickOutOfTask)
     }
   }, [ref, editMode])
+
   return (
-    <div ref={ref} className="w-full p-2">
+    <div ref={ref} className="w-full p-2" onClick={handleToggleClick}>
       {editMode ? (
         <textarea
           className="text-xs lg:text-xl text-gray-700"
           value={description}
           onChange={(e) => {
-            setDescription(e.target.value)
             handleUpdateTaskDescription(e.target.value, i)
           }}
         ></textarea>
       ) : (
-        <div className="text-xs lg:text-xl text-gray-700">{description}</div>
+        <p
+          className={`w-full text-xs lg:text-xl text-gray-700 ${
+            checked ? 'line-through text-gray-400' : ''
+          }`}
+        >
+          {description}
+        </p>
       )}
     </div>
   )
